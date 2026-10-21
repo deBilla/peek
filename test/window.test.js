@@ -15,6 +15,88 @@ process.env.PEEK_STATE_DIR = TMP;
 const win = require('../src/window');
 const { browserProfile, browserStatePath } = require('../src/config');
 
+
+test('macOS candidates include all expected browser locations', () => {
+  const paths = win.candidates('darwin', '/Users/test');
+
+  const expected = [
+    '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+    '/Applications/Google Chrome Beta.app/Contents/MacOS/Google Chrome Beta',
+    '/Applications/Chromium.app/Contents/MacOS/Chromium',
+    '/Applications/Brave Browser.app/Contents/MacOS/Brave Browser',
+    '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge',
+    '/Applications/Vivaldi.app/Contents/MacOS/Vivaldi',
+    '/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary',
+    '/Applications/Microsoft Edge Beta.app/Contents/MacOS/Microsoft Edge Beta',
+    '/Users/test/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+    '/Users/test/Applications/Chromium.app/Contents/MacOS/Chromium',
+    '/Users/test/Applications/Brave Browser.app/Contents/MacOS/Brave Browser',
+    '/Users/test/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge',
+    '/Users/test/Applications/Vivaldi.app/Contents/MacOS/Vivaldi',
+  ];
+
+  assert.deepEqual(paths, expected);
+});
+
+test('Windows candidates include all expected browser locations', () => {
+  const env = {
+    PROGRAMFILES: 'C:\\Program Files',
+    'PROGRAMFILES(X86)': 'C:\\Program Files (x86)',
+    LOCALAPPDATA: 'C:\\Users\\test\\AppData\\Local',
+  };
+
+  const paths = win.candidates('win32', 'C:\\Users\\test', env);
+  const roots = [
+    env.PROGRAMFILES,
+    env['PROGRAMFILES(X86)'],
+    env.LOCALAPPDATA,
+  ];
+
+  const browsers = [
+    'Google\\Chrome\\Application\\chrome.exe',
+    'Chromium\\Application\\chrome.exe',
+    'BraveSoftware\\Brave-Browser\\Application\\brave.exe',
+    'Microsoft\\Edge\\Application\\msedge.exe',
+    'Google\\Chrome Beta\\Application\\chrome.exe',
+    'Google\\Chrome Dev\\Application\\chrome.exe',
+    'Google\\Chrome SxS\\Application\\chrome.exe',
+    'Vivaldi\\Application\\vivaldi.exe',
+  ];
+
+  const expected = roots.flatMap((root) =>
+    browsers.map((browser) => path.win32.join(root, browser))
+  );
+
+  assert.deepEqual(paths, expected);
+});
+
+test('Linux candidates include all expected browser locations', () => {
+  const paths = win.candidates('linux', '/home/test');
+
+  const expected = [
+    '/usr/bin/google-chrome',
+    '/usr/bin/google-chrome-stable',
+    '/usr/bin/chromium',
+    '/usr/bin/chromium-browser',
+    '/usr/bin/brave-browser',
+    '/usr/bin/microsoft-edge',
+    '/snap/bin/chromium',
+    '/var/lib/flatpak/exports/bin/com.google.Chrome',
+    'google-chrome',
+    'chromium',
+    'brave-browser',
+    'microsoft-edge',
+    '/usr/bin/vivaldi-stable',
+    '/usr/bin/microsoft-edge-stable',
+    '/home/test/.local/share/flatpak/exports/bin/com.google.Chrome',
+    '/var/lib/flatpak/exports/bin/org.chromium.Chromium',
+    '/var/lib/flatpak/exports/bin/com.brave.Browser',
+  ];
+
+  assert.deepEqual(paths, expected);
+});
+
+
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // Stands in for the preview server: `clients` is the only field that matters.

@@ -4,6 +4,10 @@ All notable changes to peek. This project follows [semantic versioning](https://
 
 ## Unreleased
 
+### Improved
+
+- Expand browser discovery across Windows, Linux and macOS to recognize additional browser installation locations and variants.
+
 ### Fixed
 
 - `filenamePatterns` were plain substring checks on the basename, so a word that merely

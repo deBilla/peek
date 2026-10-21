@@ -12,8 +12,9 @@ const PLATFORM = process.platform;
 
 // Chromium-family browsers are the ones that support --app=, which is what
 // turns a page into a real window with no tabs or address bar.
-function candidates() {
-  if (PLATFORM === 'darwin') {
+function candidates(platform = PLATFORM, homeDir = os.homedir(), env = process.env) {
+  const platformPath = platform === 'win32' ? path.win32 : path.posix;
+  if (platform === 'darwin') {
     return [
       '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
       '/Applications/Google Chrome Beta.app/Contents/MacOS/Google Chrome Beta',
@@ -21,23 +22,33 @@ function candidates() {
       '/Applications/Brave Browser.app/Contents/MacOS/Brave Browser',
       '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge',
       '/Applications/Vivaldi.app/Contents/MacOS/Vivaldi',
-      path.join(os.homedir(), 'Applications/Google Chrome.app/Contents/MacOS/Google Chrome'),
+      '/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary',
+      '/Applications/Microsoft Edge Beta.app/Contents/MacOS/Microsoft Edge Beta',
+      platformPath.join(homeDir, 'Applications/Google Chrome.app/Contents/MacOS/Google Chrome'),
+      platformPath.join(homeDir, 'Applications/Chromium.app/Contents/MacOS/Chromium'),
+      platformPath.join(homeDir, 'Applications/Brave Browser.app/Contents/MacOS/Brave Browser'),
+      platformPath.join(homeDir, 'Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge'),
+      platformPath.join(homeDir, 'Applications/Vivaldi.app/Contents/MacOS/Vivaldi'),
     ];
   }
 
-  if (PLATFORM === 'win32') {
+  if (platform === 'win32') {
     const roots = [
-      process.env['PROGRAMFILES'],
-      process.env['PROGRAMFILES(X86)'],
-      process.env['LOCALAPPDATA'],
+      env['PROGRAMFILES'],
+      env['PROGRAMFILES(X86)'],
+      env['LOCALAPPDATA'],
     ].filter(Boolean);
     const rel = [
       'Google\\Chrome\\Application\\chrome.exe',
       'Chromium\\Application\\chrome.exe',
       'BraveSoftware\\Brave-Browser\\Application\\brave.exe',
       'Microsoft\\Edge\\Application\\msedge.exe',
+      'Google\\Chrome Beta\\Application\\chrome.exe',
+      'Google\\Chrome Dev\\Application\\chrome.exe',
+      'Google\\Chrome SxS\\Application\\chrome.exe',
+      'Vivaldi\\Application\\vivaldi.exe',
     ];
-    return roots.flatMap((r) => rel.map((x) => path.join(r, x)));
+    return roots.flatMap((r) => rel.map((x) => platformPath.join(r, x)));
   }
 
   // Linux and the BSDs: absolute paths first, then bare names resolved on PATH.
@@ -53,6 +64,12 @@ function candidates() {
     'google-chrome',
     'chromium',
     'brave-browser',
+    'microsoft-edge',
+    '/usr/bin/vivaldi-stable',
+    '/usr/bin/microsoft-edge-stable',
+    platformPath.join(homeDir, '.local/share/flatpak/exports/bin/com.google.Chrome'),
+    '/var/lib/flatpak/exports/bin/org.chromium.Chromium',
+    '/var/lib/flatpak/exports/bin/com.brave.Browser',
   ];
 }
 
@@ -416,6 +433,7 @@ function close() {
 }
 
 module.exports = {
+  candidates,
   ensure,
   launch,
   focus,
