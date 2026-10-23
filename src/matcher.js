@@ -73,7 +73,16 @@ function isPlan(file, cfg = DEFAULTS) {
   if (!/\.(md|markdown)$/i.test(abs)) return false;
 
   const lower = abs.toLowerCase();
-  if (cfg.excludePatterns.some((p) => lower.includes(p.toLowerCase()))) return false;
+  // An exclude pattern written with a `/` is path-style and is tested
+  // against the whole absolute path, as before (`node_modules/`,
+  // `/CLAUDE.md`). A pattern without a `/` is filename-style and is
+  // tested against the basename only: `README` excludes `README.md`,
+  // but no longer a whole `readme-assets/` directory (issue #2).
+  const base = path.basename(lower);
+  if (cfg.excludePatterns.some((p) => {
+    const want = p.toLowerCase();
+    return want.includes('/') ? lower.includes(want) : base.includes(want);
+  })) return false;
 
   let st;
   try {

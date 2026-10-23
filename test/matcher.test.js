@@ -88,3 +88,22 @@ test('treats an empty filename pattern as matching nothing', () => {
 });
 
 test.after(() => fs.rmSync(DIR, { recursive: true, force: true }));
+
+test('a filename-style exclude does not exclude a matching directory', () => {
+  // issue #2: `README` is filename-style, so a plan under `readme-assets/`
+  // is previewed instead of being excluded by the directory's name.
+  assert.ok(isPlan(write('readme-assets/rollout-plan.md', `# Anything\n\n${PAD}`), DEFAULTS));
+  assert.ok(isPlan(write('changelog-stuff/design.md', `# Anything\n\n${PAD}`), DEFAULTS));
+  assert.ok(isPlan(write('license-templates/proposal.md', `# Anything\n\n${PAD}`), DEFAULTS));
+});
+
+test('a filename-style exclude still excludes the file it names', () => {
+  assert.equal(isPlan(write('README.md', `# Project plan\n\n${PAD}`), DEFAULTS), false);
+  assert.equal(isPlan(write('readme-notes.md', `# Project plan\n\n${PAD}`), DEFAULTS), false);
+});
+
+test('a path-style exclude keeps matching the whole path', () => {
+  assert.equal(isPlan(write('node_modules/pkg/plan.md', `# Plan\n\n${PAD}`), DEFAULTS), false);
+  assert.equal(isPlan(write('CLAUDE.md', `# Plan\n\n${PAD}`), DEFAULTS), false);
+  assert.equal(isPlan(write('sub/CLAUDE.md', `# Plan\n\n${PAD}`), DEFAULTS), false);
+});
